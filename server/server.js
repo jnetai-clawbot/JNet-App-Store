@@ -9,11 +9,21 @@ const config = require('./config');
 const logger = require('./lib/logger');
 const store = require('./lib/store');
 const github = require('./lib/github');
+const settingsLib = require('./lib/settings');
 
 const app = express();
 app.disable('x-powered-by');
 
 store.ensureDirs();
+
+// Admin credentials (persisted; random password generated on first run).
+const credentials = settingsLib.ensureCredentials();
+if (credentials.generated) {
+  logger.warn('SETUP-ADMIN-PASSWORD',
+    `Generated admin password: ${credentials.settings.adminPassword}  (user: ${credentials.settings.adminUser})`);
+}
+let adminUser = credentials.settings.adminUser;
+let adminPassword = credentials.settings.adminPassword;
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -49,7 +59,7 @@ function requireAdmin(req, res, next) {
       const sep = decoded.indexOf(':');
       const user = decoded.slice(0, sep);
       const pass = decoded.slice(sep + 1);
-      if (safeEqual(user, config.ADMIN_USER) && safeEqual(pass, config.ADMIN_PASSWORD)) {
+      if (safeEqual(user, adminUser) && safeEqual(pass, adminPassword)) {
         return next();
       }
     } catch (e) {
@@ -80,6 +90,21 @@ const upload = multer({
       logger.warn('ERR-UPLOAD-001', `Rejected non-APK upload: ${file.originalname}`);
       return cb(Object.assign(new Error('Only .apk files may be uploaded'),
         { code: 'ERR-UPLOAD-001' }));
+    }
+    return cb(null, true);
+  },
+});
+
+// Icons are held in memory (small PNGs) and written under their app name.
+const iconUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const isPng = file.mimetype === 'image/png' && /\.png$/i.test(file.originalname);
+    if (!isPng) {
+      logger.warn('ERR-ICON-001', `Rejected non-PNG icon upload: ${file.originalname}`);
+      return cb(Object.assign(new Error('Only .png files may be uploaded'),
+        { code: 'ERR-ICON-001' }));
     }
     return cb(null, true);
   },
@@ -116,7 +141,8 @@ app.get('/apk/:file', (req, res) => {
 // Admin API.
 // ---------------------------------------------------------------------------
 app.get('/api/admin/apps', requireAdmin, (req, res) => {
-  res.json({ name: config.STORE_NAME, apps: store.listApps() });
+  const apps = store.listApps().map((a) => ({ ...a, iconUrl: store.iconUrlFor(a) }));
+  res.json({ name: config.STORE_NAME, apps });
 });
 
 app.post('/api/admin/apps', requireAdmin, (req, res) => {
@@ -169,6 +195,25 @@ app.delete('/api/admin/apps/:id', requireAdmin, (req, res) => {
   }
 });
 
+// Change the admin password (must be logged in).
+app.post('/api/admin/password', requireAdmin, (req, res) => {
+  try {
+    const body = req.body || {};
+    const result = settingsLib.updatePassword(body.currentPassword, body.newPassword);
+    if (!result.ok) {
+      logger.warn(result.code, 'Password change rejected');
+      return res.status(400).json({ error: result.code, message: result.message });
+    }
+    adminUser = result.settings.adminUser;
+    adminPassword = result.settings.adminPassword;
+    logger.info('PASSWORD-CHANGED', 'Admin password updated');
+    return res.json({ ok: true });
+  } catch (e) {
+    logger.error('ERR-API-010', 'Failed to change password', e.message);
+    return res.status(500).json({ error: 'ERR-API-010', message: e.message });
+  }
+});
+
 // Resolve a GitHub link into tag + APK asset URL.
 app.post('/api/admin/resolve-github', requireAdmin, async (req, res) => {
   try {
@@ -197,15 +242,51 @@ app.post('/api/admin/upload', requireAdmin, (req, res) => {
   });
 });
 
+// Upload an app icon (PNG only), stored as "<App-Name>.png" in images/.
+app.post('/api/admin/upload-icon', requireAdmin, (req, res) => {
+  iconUpload.single('icon')(req, res, (err) => {
+    if (err) {
+      logger.error(err.code || 'ERR-ICON-002', 'Icon upload failed', err.message);
+      return res.status(400).json({ error: err.code || 'ERR-ICON-002', message: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'ERR-ICON-003', message: 'No file received' });
+    }
+    const appName = (req.body && (req.body.appName || req.body.name)) || '';
+    if (!appName) {
+      return res.status(400).json({ error: 'ERR-ICON-004', message: 'appName is required' });
+    }
+    try {
+      const filename = store.iconFilenameFor(appName);
+      fs.writeFileSync(path.join(config.IMAGES_DIR, filename), req.file.buffer);
+      logger.info('ICON-OK', `Stored icon ${filename} (${req.file.size} bytes)`);
+      return res.json({ iconUrl: `/images/${filename}`, filename });
+    } catch (e) {
+      logger.error('ERR-ICON-005', 'Failed to save icon', e.message);
+      return res.status(500).json({ error: 'ERR-ICON-005', message: e.message });
+    }
+  });
+});
+
 // ---------------------------------------------------------------------------
-// Admin UI (static assets + protected index).
+// Web pages: public store at "/", admin panel at "/admin".
 // ---------------------------------------------------------------------------
 app.use('/admin-assets', express.static(config.PUBLIC_DIR));
-app.get('/', requireAdmin, (req, res) => {
-  res.sendFile(path.join(config.PUBLIC_DIR, 'index.html'));
+
+// App icons: "<App-Name>.png" files uploaded by admins.
+app.use('/images', express.static(config.IMAGES_DIR));
+
+// Public store page (no auth) — lists all enabled apps.
+app.get('/', (req, res) => {
+  res.sendFile(path.join(config.PUBLIC_DIR, 'store.html'));
 });
+app.get('/store', (req, res) => {
+  res.sendFile(path.join(config.PUBLIC_DIR, 'store.html'));
+});
+
+// Admin editor (protected).
 app.get('/admin', requireAdmin, (req, res) => {
-  res.sendFile(path.join(config.PUBLIC_DIR, 'index.html'));
+  res.sendFile(path.join(config.PUBLIC_DIR, 'admin.html'));
 });
 
 // ---------------------------------------------------------------------------

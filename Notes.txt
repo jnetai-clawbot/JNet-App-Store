@@ -28,9 +28,12 @@ SERVER — SETUP (Ubuntu/Debian)
   Options:
     --port N          port to use (default 8090)
     --user NAME       admin panel username (default admin)
-    --password PASS   admin panel password (default jnetai)
+    --password PASS   admin panel password (default: randomly generated)
     --service         install + enable systemd service "jnet-app-store"
     -h, --help        show help
+
+  setup.sh generates a random admin password on first run and prints it in the
+  terminal. Change it later from the admin panel (/admin -> Change admin password).
 
 
 SERVER — START
@@ -39,9 +42,14 @@ SERVER — START
   ./start.sh --port 8090     # explicit port
   ./start.sh --user admin --password 'secret'
 
-  Then open the admin panel:
-    http://<server-ip>:8090/          (HTTP Basic login)
-    http://localhost:8090/api/apps    (public catalog JSON used by the app)
+  Then open:
+    http://<server-ip>:8090/          public store page (all enabled apps)
+    http://<server-ip>:8090/admin     admin editor (HTTP Basic login)
+    http://localhost:8090/api/apps    public catalog JSON used by the app
+
+  The admin password is generated randomly during ./setup.sh and shown in the
+  terminal. You can change it from inside the admin panel (Change admin
+  password section). Credentials live in server/data/settings.json (mode 0600).
 
   With systemd (if installed via ./setup.sh --service):
     sudo systemctl start jnet-app-store
@@ -50,14 +58,28 @@ SERVER — START
     sudo systemctl status jnet-app-store
 
 
-ADMIN PANEL (edit the store)
-----------------------------
+ADMIN PANEL (edit the store) — /admin
+-------------------------------------
   - Add an app via a GitHub link: paste the repo/release URL and click
     "Resolve latest" to fetch the latest release tag and .apk asset.
   - Add an app by uploading an APK file (max 250 MB, .apk only).
+  - Enable/disable apps (only enabled apps appear on the public store page and
+    in the app catalog).
+  - Upload a custom app icon (PNG only) — saved as "<App-Name>.png" in
+    server/images/ and served at /images/<App-Name>.png.
   - Edit or delete existing entries.
+  - Change the admin password from inside the panel (logged in).
   - Catalog is saved to server/data/store.json; uploaded APKs live in
     server/uploads/ and are served at /apk/<file>.
+
+PUBLIC STORE PAGE — /
+----------------------
+  - Dark, centred theme listing all enabled apps with icon, name, version,
+    source badge and description.
+  - Live inline search bar at the top; the clear (X) icon resets the filter.
+  - Every app uses the default icon unless an image exists at
+    server/images/<App-Name>.png (uploaded by an admin).
+  - Dark scrollbars are used whenever scrolling is needed.
 
 
 NGINX REVERSE PROXY (apps.jnetai.com -> :8090)

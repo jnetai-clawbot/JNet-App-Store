@@ -1,0 +1,2 @@
+App icon PNGs uploaded by admins are stored here and served at /images/<file>.
+The bundled default icon is default-app.png (kept in git).

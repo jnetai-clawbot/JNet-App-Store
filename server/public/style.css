@@ -167,3 +167,163 @@ input:focus, textarea:focus { outline: none; border-color: var(--accent); }
   .grid { grid-template-columns: 1fr; }
   .row { flex-direction: column; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Dark scrollbars (used whenever scrolling is needed)                 */
+/* ------------------------------------------------------------------ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a55 var(--bg);
+}
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb {
+  background: #3a3a55;
+  border-radius: 8px;
+  border: 3px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: #4a4a6a; }
+::-webkit-scrollbar-corner { background: var(--bg); }
+
+/* ------------------------------------------------------------------ */
+/* Top nav + logo                                                      */
+/* ------------------------------------------------------------------ */
+.topnav { display: flex; gap: 18px; }
+.logo.big { width: 64px; height: 64px; font-size: 30px; border-radius: 18px; }
+
+/* ------------------------------------------------------------------ */
+/* Public store page                                                   */
+/* ------------------------------------------------------------------ */
+.store-body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-header {
+  text-align: center;
+  padding: 40px 16px 16px;
+}
+.store-header h1 {
+  margin: 14px 0 4px;
+  font-size: 28px;
+  color: var(--accent);
+}
+.store-header p { margin: 0; font-size: 13px; }
+
+.store-main {
+  flex: 1;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 12px 16px 120px;
+}
+
+.center { text-align: center; }
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 8px 0 14px;
+}
+.search-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 15px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid #33334d;
+  border-radius: 14px;
+  color: var(--text);
+  padding: 13px 44px 13px 40px;
+  font-size: 15px;
+}
+.search-input:focus { outline: none; border-color: var(--accent); }
+.search-input::-webkit-search-cancel-button { display: none; }
+
+.clear-btn {
+  position: absolute;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: #33334d;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+.clear-btn:hover { background: var(--accent); }
+
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.store-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+}
+
+.store-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--card2);
+  border: 1px solid #33334d;
+}
+
+.store-info { flex: 1; min-width: 0; }
+.store-name { font-weight: 700; font-size: 15px; }
+.store-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.store-ver { font-size: 12px; color: var(--muted); }
+.store-desc {
+  font-size: 12px;
+  color: var(--text-secondary, #cccccc);
+  margin-top: 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.store-get { text-decoration: none; padding: 9px 16px; }
+
+.store-empty { text-align: center; color: var(--muted); padding: 40px 0; }
+
+.store-footer {
+  text-align: center;
+  padding: 20px 16px 90px;
+}
+
+@media (max-width: 640px) {
+  .store-grid { grid-template-columns: 1fr; }
+}
+
+/* Admin list icon + enabled badges */
+.app-icon-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--card2);
+  border: 1px solid #33334d;
+}
+.badge.on { color: var(--green); }
+.badge.off { color: var(--accent); }

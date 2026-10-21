@@ -12,10 +12,13 @@
       <span class="logo">J</span>
       <div>
         <h1>J~Net App Store</h1>
-        <p class="muted">Editor — apps.jnetai.com</p>
+        <p class="muted">Admin — apps.jnetai.com</p>
       </div>
     </div>
-    <a class="link" href="/api/apps" target="_blank" rel="noopener">View catalog JSON</a>
+    <nav class="topnav">
+      <a class="link" href="/" target="_blank" rel="noopener">View store</a>
+      <a class="link" href="/api/apps" target="_blank" rel="noopener">Catalog JSON</a>
+    </nav>
   </header>
 
   <main>
@@ -47,6 +50,20 @@
         <label for="iconUrl">Icon URL (optional)</label>
         <input id="iconUrl" type="text" placeholder="https://..." />
       </div>
+
+      <div class="field">
+        <label>Custom app icon (PNG only)</label>
+        <div class="row">
+          <input id="iconFile" type="file" accept="image/png,.png" />
+          <button id="btnUploadIcon" class="btn secondary" type="button">Upload icon</button>
+        </div>
+        <p id="iconInfo" class="muted small">Saved as "&lt;App-Name&gt;.png" in the images/ folder. Apps without a custom image use the default icon.</p>
+      </div>
+
+      <label class="radio" style="margin-bottom:14px">
+        <input id="enabled" type="checkbox" checked />
+        <span>Enabled (visible in the public store)</span>
+      </label>
 
       <div class="source-toggle">
         <label class="radio">
@@ -91,6 +108,25 @@
         <button id="btnReload" class="btn ghost" type="button">Reload</button>
       </div>
       <div id="list" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Change admin password</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="curPass">Current password</label>
+          <input id="curPass" type="password" placeholder="Current password" />
+        </div>
+        <div class="field">
+          <label for="newPass">New password (min 6 chars)</label>
+          <input id="newPass" type="password" placeholder="New password" />
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btnChangePass" class="btn primary" type="button">Update password</button>
+        <span id="passStatus" class="status"></span>
+      </div>
+      <p class="muted small">Credentials are stored on the server in data/settings.json (mode 0600).</p>
     </section>
   </main>
 

@@ -1,6 +1,36 @@
 J~Net App Store — Change Log
 ============================
 
+[2026-10-21] v1.1.0 — Web store page, admin route, icons, password mgmt
+----------------------------------------------------------------------
+Web
+- Root "/" is now a public dark centred store page listing all ENABLED apps
+  (icon, name, version, source badge, description, Get button).
+- Live inline search bar at the top of the store page with a clear (X) icon
+  that resets the filter.
+- Admin editor moved to "/admin" (HTTP Basic protected); "/" no longer requires
+  login.
+- Dark scrollbars applied wherever scrolling is needed.
+- App icons: every app uses the bundled default icon (images/default-app.png)
+  unless a PNG exists at images/<App-Name>.png. Admins can upload a custom icon
+  (PNG only) which is saved under that name and served at /images/<file>.
+- Apps can be enabled/disabled from the admin panel; disabled apps are hidden
+  from the public page and from /api/apps.
+
+Admin / security
+- Admin password is randomly generated on first setup and printed by setup.sh
+  (and logged once by the server if generated at runtime).
+- Admin password can be changed from inside the admin panel (POST
+  /api/admin/password). Credentials stored in server/data/settings.json
+  (mode 0600, gitignored).
+
+Server / scripts
+- New lib/settings.js (persistent credentials), icon upload endpoint
+  (/api/admin/upload-icon, PNG only), /images static serving.
+- setup.sh creates images/ and generates/shows the admin password.
+- start.sh prints the store page (/), admin panel (/admin) and catalog URLs.
+- Notes.txt updated with all of the above.
+
 [2026-10-21] v1.0.0 — Initial release
 -------------------------------------
 Architecture

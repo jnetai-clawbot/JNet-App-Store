@@ -14,6 +14,37 @@ const DEFAULT_STORE = {
 function ensureDirs() {
   fs.mkdirSync(config.DATA_DIR, { recursive: true });
   fs.mkdirSync(config.UPLOAD_DIR, { recursive: true });
+  fs.mkdirSync(config.IMAGES_DIR, { recursive: true });
+}
+
+/** Sanitises an app name into a safe filename stem (e.g. "J~Net Keyboard" -> "J-Net-Keyboard"). */
+function sanitizeName(name) {
+  return String(name || 'app')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^A-Za-z0-9._-]/g, '')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'app';
+}
+
+/** The PNG filename an app's custom icon is stored under, e.g. "J-Net-Keyboard.png". */
+function iconFilenameFor(name) {
+  return `${sanitizeName(name)}.png`;
+}
+
+/**
+ * Resolves an app's icon URL: an explicit iconUrl wins, otherwise a file named
+ * "<App-Name>.png" in the images folder is used if present, else '' (default icon).
+ */
+function iconUrlFor(app) {
+  if (app.iconUrl) {
+    return app.iconUrl;
+  }
+  const file = iconFilenameFor(app.name);
+  if (fs.existsSync(path.join(config.IMAGES_DIR, file))) {
+    return `/images/${file}`;
+  }
+  return '';
 }
 
 function load() {
@@ -91,6 +122,7 @@ function addApp(data) {
     apkUrl: String(data.apkUrl || '').trim(),
     iconUrl: String(data.iconUrl || '').trim(),
     size: Number(data.size) || 0,
+    enabled: data.enabled !== false,
     updated: now,
   };
   store.apps.push(app);
@@ -115,6 +147,9 @@ function updateApp(id, data) {
   });
   if (data.size !== undefined) {
     merged.size = Number(data.size) || 0;
+  }
+  if (data.enabled !== undefined) {
+    merged.enabled = data.enabled !== false;
   }
   if (merged.source !== 'upload') {
     merged.source = 'github';
@@ -152,20 +187,23 @@ function publicCatalog() {
   return {
     name: store.name || config.STORE_NAME,
     updated: store.updated,
-    apps: store.apps.map((a) => ({
-      id: a.id,
-      name: a.name,
-      description: a.description,
-      packageName: a.packageName,
-      version: a.version,
-      source: a.source,
-      githubRepo: a.githubRepo,
-      githubUrl: a.githubUrl,
-      apkUrl: a.apkUrl,
-      iconUrl: a.iconUrl,
-      size: a.size,
-      updated: a.updated,
-    })),
+    apps: store.apps
+      .filter((a) => a.enabled !== false)
+      .map((a) => ({
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        packageName: a.packageName,
+        version: a.version,
+        source: a.source,
+        githubRepo: a.githubRepo,
+        githubUrl: a.githubUrl,
+        apkUrl: a.apkUrl,
+        iconUrl: iconUrlFor(a),
+        size: a.size,
+        enabled: a.enabled !== false,
+        updated: a.updated,
+      })),
   };
 }
 
@@ -179,4 +217,7 @@ module.exports = {
   updateApp,
   deleteApp,
   publicCatalog,
+  sanitizeName,
+  iconFilenameFor,
+  iconUrlFor,
 };

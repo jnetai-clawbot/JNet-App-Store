@@ -22,7 +22,9 @@ module.exports = {
 
   DATA_DIR: path.join(root, 'data'),
   DATA_FILE: path.join(root, 'data', 'store.json'),
+  SETTINGS_FILE: path.join(root, 'data', 'settings.json'),
   UPLOAD_DIR: path.join(root, 'uploads'),
+  IMAGES_DIR: path.join(root, 'images'),
   LOG_DIR: path.join(root, 'logs'),
   PUBLIC_DIR: path.join(root, 'public'),
 };

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>J~Net App Store</title>
+  <link rel="stylesheet" href="/admin-assets/style.css" />
+</head>
+<body class="store-body">
+  <header class="store-header">
+    <span class="logo big">J</span>
+    <h1>J~Net App Store</h1>
+    <p class="muted">Apps by jnetai.com</p>
+  </header>
+
+  <main class="store-main">
+    <div class="search-wrap">
+      <span class="search-icon" aria-hidden="true">&#128269;</span>
+      <input
+        id="search"
+        class="search-input"
+        type="search"
+        placeholder="Search apps…"
+        autocomplete="off"
+        aria-label="Search apps" />
+      <button id="clearSearch" class="clear-btn hidden" type="button"
+              aria-label="Clear search" title="Clear search">&#10005;</button>
+    </div>
+
+    <p id="storeStatus" class="muted small center">Loading apps…</p>
+
+    <div id="grid" class="store-grid"></div>
+
+    <div id="storeEmpty" class="store-empty hidden">
+      <p>No apps found.</p>
+    </div>
+  </main>
+
+  <footer class="store-footer">
+    <span class="muted small">Made by <a class="link" href="https://jnetai.com" target="_blank" rel="noopener">jnetai.com</a></span>
+  </footer>
+
+  <script src="/admin-assets/store.js"></script>
+</body>
+</html>

@@ -21,7 +21,7 @@ SERVER_DIR="$SCRIPT_DIR/server"
 PORT="${PORT:-8090}"
 HOST="${HOST:-0.0.0.0}"
 ADMIN_USER="${ADMIN_USER:-admin}"
-ADMIN_PASSWORD="${ADMIN_PASSWORD:-jnetai}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
 PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-https://apps.jnetai.com}"
 INSTALL_SERVICE=0
 NODE_MAJOR_MIN=18
@@ -42,7 +42,7 @@ Options:
   --port N          Port for the store server (default: 8090)
   --service         Install a systemd service (requires sudo)
   --user NAME       Admin panel username (default: admin)
-  --password PASS   Admin panel password (default: jnetai)
+  --password PASS   Admin panel password (default: randomly generated)
   -h, --help        Show this help
 
 Environment overrides: PORT, HOST, ADMIN_USER, ADMIN_PASSWORD, PUBLIC_BASE_URL
@@ -141,8 +141,35 @@ log "Installing server dependencies in $SERVER_DIR ..."
   || fail "ERR-SETUP-007" "npm install failed"
 
 # --- Runtime folders ------------------------------------------------------
-mkdir -p "$SERVER_DIR/data" "$SERVER_DIR/uploads" "$SERVER_DIR/logs"
-log "Ensured data/, uploads/ and logs/ directories exist."
+mkdir -p "$SERVER_DIR/data" "$SERVER_DIR/uploads" "$SERVER_DIR/logs" "$SERVER_DIR/images"
+log "Ensured data/, uploads/, logs/ and images/ directories exist."
+
+# --- Admin credentials ----------------------------------------------------
+random_password() {
+  if command -v openssl >/dev/null 2>&1; then
+    openssl rand -base64 18 | tr -d '/+=' | cut -c1-16
+  else
+    head -c 24 /dev/urandom | base64 | tr -d '/+=' | cut -c1-16
+  fi
+}
+
+SETTINGS_FILE="$SERVER_DIR/data/settings.json"
+GENERATED_PASSWORD=""
+if [[ -f "$SETTINGS_FILE" ]]; then
+  EXISTING_USER="$(node -e "try{process.stdout.write(require('$SETTINGS_FILE').adminUser||'admin')}catch(e){process.stdout.write('admin')}" 2>/dev/null || echo admin)"
+  ADMIN_USER="$EXISTING_USER"
+  log "Existing admin credentials found in data/settings.json (password unchanged)."
+else
+  if [[ -z "$ADMIN_PASSWORD" ]]; then
+    ADMIN_PASSWORD="$(random_password)"
+    GENERATED_PASSWORD="$ADMIN_PASSWORD"
+  fi
+  ESC_USER="${ADMIN_USER//\"/\\\"}"
+  ESC_PASS="${ADMIN_PASSWORD//\"/\\\"}"
+  printf '{\n  "adminUser": "%s",\n  "adminPassword": "%s"\n}\n' "$ESC_USER" "$ESC_PASS" > "$SETTINGS_FILE"
+  chmod 600 "$SETTINGS_FILE"
+  log "Created admin credentials in data/settings.json (mode 0600)."
+fi
 
 # --- Optional systemd service --------------------------------------------
 if [[ "$INSTALL_SERVICE" -eq 1 ]]; then
@@ -184,8 +211,19 @@ fi
 echo
 log "Setup complete."
 echo "  Port:        ${PORT}  (reverse proxy apps.jnetai.com -> 127.0.0.1:${PORT})"
-echo "  Admin panel: http://<server-ip>:${PORT}/   (user: ${ADMIN_USER})"
+echo "  Store page:  http://<server-ip>:${PORT}/"
+echo "  Admin panel: http://<server-ip>:${PORT}/admin"
 echo "  Catalog API: http://<server-ip>:${PORT}/api/apps"
+echo "  Admin user:  ${ADMIN_USER}"
+if [[ -n "$GENERATED_PASSWORD" ]]; then
+  echo
+  echo "  ============================================================"
+  echo "   ADMIN PASSWORD (generated):  ${GENERATED_PASSWORD}"
+  echo "   Save this now — you can change it later in the admin panel."
+  echo "  ============================================================"
+else
+  echo "  Admin pass:  (unchanged — see $SETTINGS_FILE)"
+fi
 if [[ "$INSTALL_SERVICE" -eq 1 ]]; then
   echo "  Start/stop:  sudo systemctl {start|stop|restart} ${SERVICE_NAME}"
 else

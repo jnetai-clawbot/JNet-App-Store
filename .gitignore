@@ -14,7 +14,11 @@ local.properties
 # Server
 server/node_modules/
 server/.env
+server/data/settings.json
 server/logs/*
 !server/logs/.gitkeep
 server/uploads/*
 !server/uploads/.gitkeep
+server/images/*
+!server/images/.gitkeep
+!server/images/default-app.png

@@ -70,7 +70,8 @@ echo
 log "J~Net App Store server starting"
 echo "  Port:        ${PORT}"
 echo "  Bind:        ${HOST}"
-echo "  Admin panel: http://localhost:${PORT}/   (user: ${ADMIN_USER})"
+echo "  Store page:  http://localhost:${PORT}/"
+echo "  Admin panel: http://localhost:${PORT}/admin   (user: ${ADMIN_USER})"
 echo "  Catalog API: http://localhost:${PORT}/api/apps"
 echo "  Reverse proxy apps.jnetai.com -> 127.0.0.1:${PORT}"
 echo
