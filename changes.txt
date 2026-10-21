@@ -29,6 +29,9 @@ Server / scripts
   (/api/admin/upload-icon, PNG only), /images static serving.
 - setup.sh creates images/ and generates/shows the admin password.
 - start.sh prints the store page (/), admin panel (/admin) and catalog URLs.
+- start.sh now frees the port before starting: it stops any process (or the
+  jnet-app-store systemd service) using the port, so it acts as a restart and
+  resolves "port already in use" automatically (default port 8090).
 - Notes.txt updated with all of the above.
 
 [2026-10-21] v1.0.0 — Initial release

@@ -61,10 +61,62 @@ fi
 
 mkdir -p "$SERVER_DIR/data" "$SERVER_DIR/uploads" "$SERVER_DIR/logs"
 
-# Warn if the port is already in use.
-if command -v ss >/dev/null 2>&1 && ss -ltn 2>/dev/null | grep -q ":${PORT} "; then
-  fail "ERR-START-005" "Port ${PORT} is already in use. Choose another with --port N."
-fi
+# --- Free the port (restart behaviour) ------------------------------------
+# Find PIDs listening on the port, stop them, then start fresh. This makes
+# start.sh act as a restart and resolves "port already in use" automatically.
+pids_on_port() {
+  local pids=""
+  if command -v lsof >/dev/null 2>&1; then
+    pids="$(lsof -ti tcp:"$PORT" -sTCP:LISTEN 2>/dev/null || true)"
+  fi
+  if [[ -z "$pids" ]] && command -v ss >/dev/null 2>&1; then
+    pids="$(ss -ltnp 2>/dev/null | awk -v p=":${PORT}" '$4 ~ p {print}' \
+      | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u || true)"
+  fi
+  if [[ -z "$pids" ]] && command -v fuser >/dev/null 2>&1; then
+    pids="$(fuser "${PORT}/tcp" 2>/dev/null || true)"
+  fi
+  echo "$pids"
+}
+
+free_port() {
+  # If a systemd service owns the port, stop it so it doesn't respawn.
+  if command -v systemctl >/dev/null 2>&1 \
+     && systemctl is-active --quiet jnet-app-store 2>/dev/null; then
+    log "Stopping systemd service jnet-app-store ..."
+    sudo systemctl stop jnet-app-store 2>/dev/null || systemctl stop jnet-app-store 2>/dev/null || true
+    sleep 1
+  fi
+
+  local pids
+  pids="$(pids_on_port)"
+  [[ -z "$pids" ]] && return 0
+
+  local me="$$"
+  for pid in $pids; do
+    [[ "$pid" == "$me" || "$pid" == "1" ]] && continue
+    log "Port ${PORT} in use by PID ${pid} — stopping it ..."
+    kill "$pid" 2>/dev/null || sudo kill "$pid" 2>/dev/null || true
+  done
+
+  # Give processes a moment to exit, then force-kill any stragglers.
+  for _ in 1 2 3 4 5; do
+    sleep 1
+    [[ -z "$(pids_on_port)" ]] && break
+  done
+  for pid in $(pids_on_port); do
+    [[ "$pid" == "$me" || "$pid" == "1" ]] && continue
+    log "Force-killing PID ${pid} on port ${PORT} ..."
+    kill -9 "$pid" 2>/dev/null || sudo kill -9 "$pid" 2>/dev/null || true
+  done
+
+  if [[ -n "$(pids_on_port)" ]]; then
+    fail "ERR-START-005" "Port ${PORT} is still in use after stopping processes. Choose another with --port N."
+  fi
+  log "Port ${PORT} is now free."
+}
+
+free_port
 
 echo
 log "J~Net App Store server starting"
