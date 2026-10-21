@@ -1,0 +1,46 @@
+J~Net App Store — Change Log
+============================
+
+[2026-10-21] v1.0.0 — Initial release
+-------------------------------------
+Architecture
+- Android app (com.jnetai.appstore) that connects to a self-hosted store at
+  https://apps.jnetai.com (store URL is configurable in the About screen).
+- Node.js store server (server/) with a web admin panel used to curate the
+  catalog: add apps via a GitHub link OR by uploading an APK file.
+
+Android app
+- Main screen lists catalog apps fetched from GET {store}/api/apps, with pull to
+  refresh, refresh button and About button. Bottom padding reserved so the last
+  card is never clipped by the system navigation bar.
+- Each entry shows icon placeholder, name, version, source badge (GitHub /
+  Uploaded) and a Get button.
+- Downloads the APK (with progress dialog) and launches the system package
+  installer via FileProvider. Prompts to grant "install unknown apps" when needed.
+- Graceful fallbacks: offline cache of the last catalog; on failure offers to open
+  the store in a browser; failed downloads offer the GitHub download page.
+- About screen: "Made by jnetai.com", full version number, Check for Update
+  (GitHub latest release tag), Share App, Change Store URL, Open Store in Browser.
+- Dark, centred, professional theme. minSdk 26 (Samsung S8 / Pixel 6+).
+- Permanent diagnostics: DebugLogger + ErrorHandler with stable ERR-* codes,
+  detailed messages and stack traces (kept permanently per PROMPT.md).
+
+Store server (Node.js)
+- Public API: GET /api/apps (catalog), GET /apk/:file (uploaded APKs),
+  GET /api/health.
+- Admin (HTTP Basic): list/create/update/delete apps, resolve GitHub latest
+  release, upload APK (multer, max 250 MB, .apk only).
+- Web admin panel (public/) to add apps by GitHub link (with "Resolve latest"
+  to fetch the release tag and APK asset) or by uploading an APK.
+- Persists catalog to data/store.json (atomic writes); uploaded APKs in uploads/.
+- Permanent structured logging with ERR-* codes to stdout and logs/store.log.
+- Default port 8090 (apps.jnetai.com reverse proxy target). See server/README.md.
+- Seeded with 7 existing J~Net apps resolved from their GitHub releases.
+
+Build / release
+- GitHub Actions workflow (.github/workflows/release.yml) builds the signed
+  release APK on every tag push (v*) and publishes a GitHub Release containing
+  J~Net-App-Store.apk. Debug variant is signed with the same release key.
+- Single permanent keystore (jnet-app-store-keystore.jks, alias "appstore") so
+  updates install over the top without uninstalling. Password stored in the
+  password vault; base64 + passwords configured as repository secrets.

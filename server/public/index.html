@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>J~Net App Store — Admin</title>
+  <link rel="stylesheet" href="/admin-assets/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">J</span>
+      <div>
+        <h1>J~Net App Store</h1>
+        <p class="muted">Editor — apps.jnetai.com</p>
+      </div>
+    </div>
+    <a class="link" href="/api/apps" target="_blank" rel="noopener">View catalog JSON</a>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2 id="formTitle">Add an app</h2>
+
+      <div class="field">
+        <label for="name">App name *</label>
+        <input id="name" type="text" placeholder="J~Net Keyboard" />
+      </div>
+
+      <div class="field">
+        <label for="description">Description</label>
+        <textarea id="description" rows="3" placeholder="Short description shown in the store"></textarea>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="packageName">Package name</label>
+          <input id="packageName" type="text" placeholder="com.jnetai.keyboard" />
+        </div>
+        <div class="field">
+          <label for="version">Version</label>
+          <input id="version" type="text" placeholder="1.0.0" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="iconUrl">Icon URL (optional)</label>
+        <input id="iconUrl" type="text" placeholder="https://..." />
+      </div>
+
+      <div class="source-toggle">
+        <label class="radio">
+          <input type="radio" name="source" value="github" checked />
+          <span>GitHub link</span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="source" value="upload" />
+          <span>Upload APK file</span>
+        </label>
+      </div>
+
+      <div id="githubPanel" class="panel">
+        <div class="field">
+          <label for="githubUrl">GitHub repo / release link</label>
+          <div class="row">
+            <input id="githubUrl" type="text" placeholder="https://github.com/jnetai-clawbot/JNet-Keyboard" />
+            <button id="btnResolve" class="btn secondary" type="button">Resolve latest</button>
+          </div>
+        </div>
+        <p id="resolveInfo" class="muted small">Paste a repo or release link and resolve to fetch the latest APK asset.</p>
+      </div>
+
+      <div id="uploadPanel" class="panel hidden">
+        <div class="field">
+          <label for="apkFile">APK file (max 250 MB)</label>
+          <input id="apkFile" type="file" accept=".apk,application/vnd.android.package-archive" />
+        </div>
+        <p id="uploadInfo" class="muted small">Uploaded APKs are served from this server at /apk/&lt;file&gt;.</p>
+      </div>
+
+      <div class="actions">
+        <button id="btnSave" class="btn primary" type="button">Save app</button>
+        <button id="btnCancel" class="btn ghost hidden" type="button">Cancel edit</button>
+        <span id="status" class="status"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="list-head">
+        <h2>Catalog</h2>
+        <button id="btnReload" class="btn ghost" type="button">Reload</button>
+      </div>
+      <div id="list" class="list"></div>
+    </section>
+  </main>
+
+  <script src="/admin-assets/app.js"></script>
+</body>
+</html>

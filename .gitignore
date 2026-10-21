@@ -1,0 +1,20 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+/app/build
+/app/release
+
+# Server
+server/node_modules/
+server/.env
+server/logs/*
+!server/logs/.gitkeep
+server/uploads/*
+!server/uploads/.gitkeep

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="dark_bg">#121212</color>
+    <color name="dark_secondary">#1E1E2E</color>
+    <color name="dark_card">#23233A</color>
+    <color name="dark_accent">#0F3460</color>
+    <color name="accent_red">#E94560</color>
+    <color name="accent_green">#2ECC71</color>
+    <color name="accent_blue">#4EA1FF</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#CCCCCC</color>
+    <color name="text_muted">#8A8A9A</color>
+</resources>
