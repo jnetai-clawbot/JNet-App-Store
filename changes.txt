@@ -37,6 +37,16 @@ Store server (Node.js)
 - Default port 8090 (apps.jnetai.com reverse proxy target). See server/README.md.
 - Seeded with 7 existing J~Net apps resolved from their GitHub releases.
 
+Server setup / start scripts
+- setup.sh: Ubuntu/Debian setup — ensures Node.js >= 18 (NodeSource), runs
+  npm install, creates data/uploads/logs, optionally installs a systemd service
+  (--service). Accepts --port/--user/--password and prints the port.
+- start.sh: starts the Node.js store server, auto-installs deps on first run,
+  warns if the port is in use, and prints the port + admin/catalog URLs.
+- Default port 8090 (override with PORT=... or --port N).
+- Notes.txt updated with full instructions of use including the port and the
+  apps.jnetai.com reverse proxy setup.
+
 Build / release
 - GitHub Actions workflow (.github/workflows/release.yml) builds the signed
   release APK on every tag push (v*) and publishes a GitHub Release containing
